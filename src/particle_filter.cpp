@@ -15,6 +15,35 @@
 
 using namespace std;
 
+const vector<LandmarkObs> nearestNeighbours(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
+
+	vector<LandmarkObs> min_obs;
+
+	 for (int i =0; i < observations.size(); i++){
+
+		 LandmarkObs obs = observations[i];
+
+		 int min_dist = INFINITY;
+		 LandmarkObs min;
+
+		 for (int j =0; j < predicted.size(); j++){
+			 LandmarkObs pred = predicted[j];
+			 double dis = dist(obs.x,obs.y,pred.x,pred.y);
+			 if(dis < min_dist ){
+				 min_dist = dis;
+				 min = pred;
+			 }
+
+		 }
+
+		 min_obs.push_back(min);
+
+	 }
+
+	 return min_obs;
+}
+
+
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1.
@@ -91,7 +120,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 
 }
 
-vector<LandmarkObs> ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
+void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
 	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
@@ -120,9 +149,12 @@ vector<LandmarkObs> ParticleFilter::dataAssociation(std::vector<LandmarkObs> pre
 
 	}
 
-	return min_obs;
+	observations = min_obs;
 
 }
+
+
+
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		std::vector<LandmarkObs> observations, Map map_landmarks) {
@@ -168,7 +200,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		}
 
 		// Find the nearest-neighbors for the transformed operations
-		vector<LandmarkObs> obs_nn = dataAssociation(lm_in_range, obs_trans);
+		vector<LandmarkObs> obs_nn = nearestNeighbours(lm_in_range, obs_trans);
 
 		// Calculate the weights from total probability
 		double prob = 1.0f;
